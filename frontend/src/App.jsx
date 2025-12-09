@@ -14,6 +14,11 @@ import MisCitas from './pages/MisCitas';
 import NuevaCita from './pages/NuevaCita';
 import DetalleCita from './pages/DetalleCita';
 import MiPerfil from './pages/MiPerfil';
+import ProfesionalDashboard from './pages/ProfesionalDashboard';
+import ProfesionalCitas from './pages/ProfesionalCitas';
+import ProfesionalDetalleCita from './pages/ProfesionalDetalleCita';
+import ProfesionalDisponibilidad from './pages/ProfesionalDisponibilidad';
+
 
 // Página 404
 function NotFound() {
@@ -120,23 +125,39 @@ function App() {
         />
 
         {/* Rutas de Profesional */}
-        <Route
-          path="/profesional"
-          element={
-            <ProtectedRoute allowedRoles={['PROFESIONAL']}>
-              <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="card max-w-md text-center">
-                  <h1 className="text-2xl font-bold mb-4">Panel Profesional</h1>
-                  <p className="text-gray-600 mb-4">En construcción...</p>
-                  <a href="/login" className="btn btn-primary">
-                    Cerrar Sesión
-                  </a>
-                </div>
-              </div>
-            </ProtectedRoute>
-          }
-        />
+       <Route
+  path="/profesional"
+  element={
+    <ProtectedRoute allowedRoles={['PROFESIONAL']}>
+      <ProfesionalDashboard />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/profesional/mis-citas"
+  element={
+    <ProtectedRoute allowedRoles={['PROFESIONAL']}>
+      <ProfesionalCitas />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/profesional/cita/:id"
+  element={
+    <ProtectedRoute allowedRoles={['PROFESIONAL']}>
+      <ProfesionalDetalleCita />
+    </ProtectedRoute>
+  }
+/>
 
+<Route
+  path="/profesional/disponibilidad"
+  element={
+    <ProtectedRoute allowedRoles={['PROFESIONAL']}>
+      <ProfesionalDisponibilidad />
+    </ProtectedRoute>
+  }
+/>
         {/* Rutas de Admin */}
         <Route
           path="/admin"
