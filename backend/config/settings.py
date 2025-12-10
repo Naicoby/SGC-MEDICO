@@ -2,7 +2,8 @@
 """
 Configuración de Django para el proyecto SGC.
 """
-
+import os
+from pathlib import Path
 from pathlib import Path
 from decouple import config
 from datetime import timedelta
@@ -96,8 +97,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR.parent / 'db.sqlite3',  # La DB estará en la raíz del proyecto (sgc-medico)
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_DB', 'sgc_db'),
+        'USER': os.environ.get('POSTGRES_USER', 'sgc_user'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'sgc_password123'),
+        'HOST': os.environ.get('DB_HOST', 'db'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
@@ -155,11 +160,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # CORS_ALLOW_ALL_ORIGINS = True # Se recomienda usar la lista explícita en producción
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5173", # Puerto común de Vite
+    "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://frontend:5173",
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     # JWT Authentication es la clase por defecto (RNF-01: Autenticación basada en tokens)
@@ -196,12 +202,14 @@ SIMPLE_JWT = {
 # ==============================================================================
 
 # Broker URL (Se usará Redis)
-CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://127.0.0.1:6379/0')
-CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://127.0.0.1:6379/0')
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = TIME_ZONE
+CELERY_TIMEZONE = 'America/Santiago'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutos
 
 # ==============================================================================
 # 10. CONFIGURACIÓN LOCAL DEL PROYECTO (SGC)

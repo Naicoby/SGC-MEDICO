@@ -1,0 +1,130 @@
+services:
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: sgc_db
+    environment:
+      POSTGRES_DB: sgc_db
+      POSTGRES_USER: sgc_user
+      POSTGRES_PASSWORD: sgc_password123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - sgc_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sgc_user -d sgc_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - Broker de mensajes
+  redis:
+    image: redis:7-alpine
+    container_name: sgc_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - sgc_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Django
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sgc_backend
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - DATABASE_URL=postgresql://sgc_user:sgc_password123@db:5432/sgc_db
+      - SECRET_KEY=django-insecure-development-key-change-in-production
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sgc_network
+
+  # Celery Worker - Procesa tareas asíncronas
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sgc_celery_worker
+    command: celery -A config worker --loglevel=info
+    volumes:
+      - ./backend:/app
+    environment:
+      - DEBUG=True
+      - DATABASE_URL=postgresql://sgc_user:sgc_password123@db:5432/sgc_db
+      - SECRET_KEY=django-insecure-development-key-change-in-production
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+      - backend
+    networks:
+      - sgc_network
+
+  # Celery Beat - Scheduler de tareas programadas
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sgc_celery_beat
+    command: celery -A config beat --loglevel=info
+    volumes:
+      - ./backend:/app
+    environment:
+      - DEBUG=True
+      - DATABASE_URL=postgresql://sgc_user:sgc_password123@db:5432/sgc_db
+      - SECRET_KEY=django-insecure-development-key-change-in-production
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+      - backend
+    networks:
+      - sgc_network
+
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sgc_frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
+    depends_on:
+      - backend
+    networks:
+      - sgc_network
+
+volumes:
+  postgres_data:
+
+networks:
+  sgc_network:
+    driver: bridge
