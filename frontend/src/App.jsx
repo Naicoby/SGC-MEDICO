@@ -18,6 +18,11 @@ import ProfesionalDashboard from './pages/ProfesionalDashboard';
 import ProfesionalCitas from './pages/ProfesionalCitas';
 import ProfesionalDetalleCita from './pages/ProfesionalDetalleCita';
 import ProfesionalDisponibilidad from './pages/ProfesionalDisponibilidad';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminUsuarios from './pages/AdminUsuarios';
+import AdminCitas from './pages/AdminCitas';
+import AdminReportes from './pages/AdminReportes';
+
 
 
 // Página 404
@@ -159,22 +164,41 @@ function App() {
   }
 />
         {/* Rutas de Admin */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={['ADMIN']}>
-              <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="card max-w-md text-center">
-                  <h1 className="text-2xl font-bold mb-4">Panel Administrador</h1>
-                  <p className="text-gray-600 mb-4">En construcción...</p>
-                  <a href="/login" className="btn btn-primary">
-                    Cerrar Sesión
-                  </a>
-                </div>
-              </div>
-            </ProtectedRoute>
-          }
-        />
+   
+   <Route
+  path="/admin"
+  element={
+    <ProtectedRoute allowedRoles={['ADMIN']}>
+      <AdminDashboard />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/usuarios"
+  element={
+    <ProtectedRoute allowedRoles={['ADMIN']}>
+      <AdminUsuarios />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/citas"
+  element={
+    <ProtectedRoute allowedRoles={['ADMIN']}>
+      <AdminCitas />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/admin/reportes"
+  element={
+    <ProtectedRoute allowedRoles={['ADMIN']}>
+      <AdminReportes />
+    </ProtectedRoute>
+  }
+/>
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
